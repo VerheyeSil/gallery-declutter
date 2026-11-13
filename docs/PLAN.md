@@ -11,12 +11,23 @@ uploads.
 |---|---|---|
 | Platform | Android first | It's the phone I use. Expo keeps iOS possible later. |
 | Stack | React Native + Expo (TypeScript) | One codebase, fast testing with Expo Go, and `expo-media-library` covers listing, metadata, deleting and albums. |
-| PC | No desktop app. A one-off **gather script** (Phase 0) moves everything onto the phone. | The phone becomes the single source of truth. |
+| Scope | Start with what's **on the phone**. Old Google Photos cloud library next, PC photos later. | Lets us start right away. The app can only see photos stored on the device (see Phase 0). |
+| PC | Later. No desktop app, just a one-off **gather script** that moves PC photos onto the phone. | The phone becomes the single source of truth. |
 | Automation | The app *suggests*, and the user always decides | Nothing is deleted or filed without a swipe or tap. |
 | Deleting | Collected in a "to delete" pile, then confirmed in one batch | Android shows its own confirmation, and photos go to the system trash, so mistakes can be recovered. |
 | Privacy | Fully on-device | Photos never leave the phone, so a public repo is fine. |
 
-## Phase 0: Gather everything on the phone
+## Phase 0: Gather everything on the phone (in steps, not a blocker)
+
+**Order:** (a) photos already on the phone, which the app can use right away →
+(b) the old Google Photos cloud library → (c) PC photos.
+
+**Limitation:** the app reads Android's on-device media store. Photos that exist
+only in the Google Photos cloud are invisible to it, and since 2025 Google's
+Photos API no longer lets apps read your whole library. Cloud-only photos
+therefore have to be **downloaded to the phone** first, either with Google
+Takeout (best for many photos) or with "Download" in the Google Photos app for
+small batches.
 
 Photos are currently spread over three sources:
 
