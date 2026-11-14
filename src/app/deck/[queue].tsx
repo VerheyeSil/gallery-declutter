@@ -3,7 +3,7 @@ import { useCallback, useMemo, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AlbumPicker } from '../../components/AlbumPicker';
-import { StaticCard, SwipeCard, type SwipeAction } from '../../components/SwipeCard';
+import { SwipeCard, type SwipeAction } from '../../components/SwipeCard';
 import { QUEUES, buildQueue, type QueueId } from '../../lib/queues';
 import { useLibrary, type PhotoSnapshot } from '../../state/library';
 import { colors } from '../../theme';
@@ -20,7 +20,8 @@ export default function Deck() {
   // Built once per library load, so the order stays put while you swipe.
   const queue = useMemo(() => buildQueue(queueId, photos, saved.lastVisitAt), [queueId, photos, saved.lastVisitAt]);
   const todo = useMemo(() => queue.filter((p) => !isHandled(p.id)), [queue, isHandled]);
-  const [current, next] = todo;
+  const [current] = todo;
+  const [deckSize, setDeckSize] = useState({ width: 0, height: 0 });
 
   const [undoStack, setUndoStack] = useState<UndoEntry[]>([]);
   const [pickerFor, setPickerFor] = useState<string | null>(null);
@@ -63,12 +64,27 @@ export default function Deck() {
     <View style={[styles.page, { paddingBottom: insets.bottom + 12 }]}>
       <Stack.Screen options={{ title: `${queueInfo.title} · ${todo.length.toLocaleString()} left` }} />
 
-      <View style={styles.deck}>
+      <View
+        style={styles.deck}
+        onLayout={(e) => setDeckSize({ width: e.nativeEvent.layout.width, height: e.nativeEvent.layout.height })}
+      >
         {current ? (
-          <>
-            {next && <StaticCard key={next.id} photo={next} />}
-            <SwipeCard key={current.id} photo={current} onSwipe={decide} />
-          </>
+          // The next two photos are already mounted (and loaded) underneath, keyed by
+          // photo, so after a swipe the next card just moves up: no reload, no flicker.
+          deckSize.width > 0 &&
+          todo
+            .slice(0, 3)
+            .reverse()
+            .map((photo) => (
+              <SwipeCard
+                key={photo.id}
+                photo={photo}
+                active={photo.id === current.id}
+                width={deckSize.width}
+                height={deckSize.height}
+                onSwipe={decide}
+              />
+            ))
         ) : (
           <View style={styles.empty}>
             <Text style={styles.emptyTitle}>All done here 🎉</Text>
@@ -108,7 +124,7 @@ export default function Deck() {
 }
 
 function RoundButton(props: { label: string; color: string; onPress: () => void; small?: boolean; disabled?: boolean }) {
-  const size = props.small ? 48 : 64;
+  const size = props.small ? 44 : 58;
   return (
     <Pressable
       onPress={props.onPress}
@@ -125,8 +141,8 @@ function RoundButton(props: { label: string; color: string; onPress: () => void;
 }
 
 const styles = StyleSheet.create({
-  page: { flex: 1, paddingTop: 8 },
-  deck: { flex: 1 },
+  page: { flex: 1, paddingTop: 4, gap: 12 },
+  deck: { flex: 1, marginHorizontal: 8 },
   empty: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 12, padding: 24 },
   emptyTitle: { color: colors.text, fontSize: 22, fontWeight: '700' },
   muted: { color: colors.muted, fontSize: 15, textAlign: 'center' },
@@ -135,6 +151,6 @@ const styles = StyleSheet.create({
   actions: { flexDirection: 'row', justifyContent: 'space-evenly', alignItems: 'center', paddingHorizontal: 16 },
   round: { borderWidth: 2, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.card },
   roundLabel: { fontWeight: '700' },
-  sameAlbum: { alignSelf: 'center', marginTop: 10, paddingHorizontal: 14, paddingVertical: 6, borderRadius: 16, backgroundColor: colors.card },
+  sameAlbum: { alignSelf: 'center', marginTop: -4, paddingHorizontal: 14, paddingVertical: 6, borderRadius: 16, backgroundColor: colors.card },
   sameAlbumText: { color: colors.album, fontSize: 14, maxWidth: 260 },
 });

@@ -1,104 +1,122 @@
 # Gallery Declutter: Plan
 
-An Android app for cleaning up a messy photo gallery. You swipe through photos
-to keep or delete them, sort them into albums with minimal effort, and browse
-the result as a timeline. Everything runs on the phone, with no server and no
-uploads.
+An Android app for cleaning up a messy photo gallery: swipe through photos to
+keep or delete them, and sort the keepers into albums with minimal effort.
+
+**Local only.** No Google Photos, no cloud accounts, no server. Photos stay on
+the phone and sync to the PC over the home network.
+
+## The big picture
+
+Gallery Declutter is deliberately **one focused tool**, not a full gallery app.
+It sits in a fully local setup together with existing open-source tools:
+
+```
+ Phone                                      PC
+┌──────────────────────────┐   Syncthing   ┌──────────────────────────┐
+│ Gallery Declutter        │ ◄───────────► │ Photo folders            │
+│  · swipe: keep / delete  │  (local Wi-Fi,│  · backup + versioning   │
+│  · sort into albums      │   no cloud)   │                          │
+│    (= folders)           │               │ Immich (optional)        │
+└──────────────────────────┘               │  · timeline, map, faces, │
+                                           │    search                │
+                                           └──────────────────────────┘
+```
+
+- **Gallery Declutter** does what other tools do badly: decluttering fast and
+  sorting into albums, tuned to this gallery (mostly WhatsApp).
+- **[Syncthing](https://syncthing.net)** keeps phone and PC folders in sync over
+  the local network. Android albums are folders, so albums made in the app show
+  up as folders on the PC.
+- **[Immich](https://immich.app)** (optional, self-hosted on the PC) covers
+  timeline, map, face grouping and search. That's why this app won't build its
+  own timeline.
 
 ## Decisions
 
 | Topic | Decision | Why |
 |---|---|---|
-| Platform | Android first | It's the phone I use. Expo keeps iOS possible later. |
-| Stack | React Native + Expo (TypeScript) | One codebase, fast testing with Expo Go, and `expo-media-library` covers listing, metadata, deleting and albums. |
-| Scope | Start with what's **on the phone**. Old Google Photos cloud library next, PC photos later. | Lets us start right away. The app can only see photos stored on the device (see Phase 0). |
-| PC | Later. No desktop app, just a one-off **gather script** that moves PC photos onto the phone. | The phone becomes the single source of truth. |
-| Automation | The app *suggests*, and the user always decides | Nothing is deleted or filed without a swipe or tap. |
-| Deleting | Collected in a "to delete" pile, then confirmed in one batch | Deleting is **permanent** after Android's confirmation dialog (there's no trash), so the in-app review step is the safety net. |
-| Privacy | Fully on-device | Photos never leave the phone, so a public repo is fine. |
-| Progress | Every handled photo is saved by ID with a timestamp, plus the time of the last visit | You never review a photo twice. Old photos imported later (e.g. from Google Photos) still show up, which a single "reviewed up to" date would miss. |
-| Albums on Android | An album is a folder (`Pictures/<name>`). Photos are **moved**, not copied. | No duplicate files. WhatsApp chats may no longer show photos that were moved out of the WhatsApp folder. |
+| Cloud | None. Google Photos is out. | Keep everything local and private. |
+| Platform | Android | It's the phone in use. Expo keeps iOS possible later. |
+| Stack | React Native + Expo (TypeScript, Expo Router), standalone APK via EAS | Expo Go can't fully access the media library on Android. |
+| Scope | A focused declutter + album tool. No gallery, timeline or map. | Those already exist (Immich). Effort goes where nothing good exists. |
+| PC sync | Syncthing, not built ourselves | Mature, local, open source. |
+| Automation | The app *suggests*, the user always decides | Nothing is deleted or filed without a swipe or tap. |
+| Deleting | Collected in a "to delete" pile, then confirmed in one batch | Deleting is **permanent** after Android's confirmation (no trash). The in-app review step, plus Syncthing versioning on the PC, are the safety nets. |
+| Progress | Every handled photo is saved by ID with a timestamp, plus the time of the last visit | You never review a photo twice. Old photos imported later still show up, which a single "reviewed up to" date would miss. |
+| Albums | An album is a folder (`Pictures/<name>`). Photos are **moved**, not copied. | No duplicate files, and albums sync to the PC as plain folders. WhatsApp chats may no longer show moved photos. |
+| Privacy | Fully on-device, public repo | No photo data ever leaves your own devices. |
 
-## Phase 0: Gather everything on the phone (in steps, not a blocker)
+## Done
 
-**Order:** (a) photos already on the phone, which the app can use right away →
-(b) the old Google Photos cloud library → (c) PC photos.
+### v0.1: Swipe deck + album maker ✅
 
-**Limitation:** the app reads Android's on-device media store. Photos that exist
-only in the Google Photos cloud are invisible to it, and since 2025 Google's
-Photos API no longer lets apps read your whole library. Cloud-only photos
-therefore have to be **downloaded to the phone** first, either with Google
-Takeout (best for many photos) or with "Download" in the Google Photos app for
-small batches.
+- Swipe right to keep, left to delete, up to add to an album, with undo
+- "Also into <last album>" shortcut button
+- Queues: new since last visit, screenshots, WhatsApp, camera, everything (oldest first)
+- Progress saved per photo, so photos are never reviewed twice
+- Review & apply screen: check deletes and album moves, then apply in one batch
+- Album maker: suggests albums from events (photos close together in time); include/exclude photos, rename, or skip
+- Real dates for WhatsApp photos from the filename (`IMG-20240512-WA0003.jpg`)
 
-Photos are currently spread over three sources:
+### v0.1.1: Swipe polish ✅
 
-1. **WhatsApp**, the biggest source, already on the phone (`Android/media/com.whatsapp/WhatsApp/Media/WhatsApp Images`).
-2. **Google Photos (old library)**: download it with [Google Takeout](https://takeout.google.com).
-3. **PC folders**.
+- Fixed black flicker after each swipe (the next card is now pre-loaded underneath instead of rebuilt)
+- The photo fills the whole card, with the caption overlaid; landscape photos are shown in full
 
-Problems the gather step has to handle:
+## Next
 
-- **WhatsApp strips EXIF.** The real date only survives in the filename
-  (`IMG-20240512-WA0003.jpg`). Without it, every photo looks like it was taken
-  on the day it was copied.
-- **Takeout puts dates in sidecar `.json` files** (`photoTakenTime`), and file
-  timestamps become the download date.
-- **Duplicates across sources**: the same photo is often in WhatsApp, Google
-  Photos *and* on the PC.
+### 1. Try it for real (now)
 
-Plan: a small **Python script on the PC** (`tools/gather/`) that:
+Use it for a week on the WhatsApp backlog. Write down what feels slow or wrong.
 
-1. Scans the PC folders and the unzipped Takeout export.
-2. Works out the real "taken" date for each file (EXIF → Takeout JSON → filename pattern → file date).
-3. Writes that date into EXIF (or at least the file modified time) so the phone sorts it correctly.
-4. Removes exact duplicates (by hash) and reports near-duplicates.
-5. Outputs one clean folder to copy to the phone over USB, for example into `Pictures/Imported`.
+### 2. Set up local sync with the PC
 
-WhatsApp photos already on the phone get their dates fixed in the app itself,
-by parsing the filename.
+No code, just setup (document it in `docs/SYNC.md`):
 
-## Phase 1: MVP swipe deck ✅ built
+- Install Syncthing on the PC and Syncthing-Fork on Android.
+- Share `DCIM/Camera`, `Pictures` (albums made by the app), and `WhatsApp Images` if wanted.
+- **Turn on file versioning on the PC side** ("Staggered" or "Trash Can"), so a
+  photo deleted on the phone can still be recovered on the PC.
+- Decide the direction per folder: two-way, or phone → PC ("Send Only").
 
-- Ask for photo access (`expo-media-library`).
-- **Queues**: "Screenshots", "WhatsApp", "Everything", each oldest-first or per month.
-- **Swipe deck**:
-  - → right: **keep**
-  - ← left: **delete** (into the pending pile)
-  - ↑ up: **add to album** (Phase 3)
-  - Undo button
-- **Review & delete** screen: a grid of the pending pile, deselect any photo, then one batch delete.
-- Remember which photos were already reviewed, so they don't come back (local storage / SQLite).
-- Progress counter ("1,240 of 8,512 reviewed · 3.1 GB freed").
+### 3. Smarter trash detection
 
-## Phase 2: Smarter trash detection
+Extra queues of likely trash, all computed on the phone:
 
-Automatic queues of likely trash:
+- **Duplicates & bursts**: exact duplicates (hash) and near-duplicates
+  (perceptual hash); show them side by side and keep the best one
+- **WhatsApp junk**: memes, stickers, forwards (heuristics: image size, no
+  camera data, many received at once)
+- **Blurry or very dark** photos (sharpness/brightness score)
+- **Documents, receipts, whiteboards** (on-device image labels)
 
-- Screenshots (`Screenshots` folder/bucket)
-- WhatsApp junk: memes, stickers, forwarded images (heuristics: no EXIF, typical sizes, received in groups)
-- Exact and near-duplicates (perceptual hash), and bursts: keep the sharpest one
-- Blurry or very dark photos (sharpness/brightness score)
-- Photos of documents, receipts and whiteboards (on-device ML Kit labels)
+### 4. Bring in the other photos
 
-## Phase 3: Albums ✅ built (swipe-up picker + event suggestions, time-based)
+- **Old Google Photos library**: download it once with
+  [Google Takeout](https://takeout.google.com), then never use Google Photos again.
+  Takeout keeps dates in sidecar `.json` files (`photoTakenTime`) and file dates
+  become the download date, so dates need fixing.
+- **PC photos**: with Syncthing they can reach the phone, or be decluttered on
+  the PC.
+- A small **gather script** on the PC (`tools/gather/`): reads Takeout + PC
+  folders, fixes dates (EXIF → Takeout JSON → filename → file date), removes
+  exact duplicates, and outputs one clean folder that Syncthing sends to the
+  phone (`Pictures/Imported`). The app then treats it like any other queue.
 
-1. **Swipe up → quick album picker**: recent albums as chips, plus "New album…".
-2. **Suggested events**: cluster photos by time (and GPS when available) into
-   events like "Barcelona · 12–16 Mar 2025" or "Sat 4 May 2024". You accept,
-   rename, merge or skip each one with a tap, and it becomes a real album.
-3. Later: themed suggestions from on-device labels (food, pets, documents…).
+### 5. Album maker improvements
 
-Note: WhatsApp photos have no GPS, so their events are grouped by time only.
+- Merge two neighbouring event suggestions
+- Use GPS (when present) to split events by place and suggest names with the city
+- Themed suggestions from on-device labels (food, pets, documents…)
 
-## Phase 4: Timeline & map
+## Not planned
 
-- Scrollable timeline of events → months → years
-- Map view for photos that have GPS
-- "On this day"
+- **Timeline / map / face grouping / search**: use Immich on the PC.
+- **Cloud backup**: Syncthing to the PC (plus your own PC backup) covers it.
 
 ## Open questions
 
-- Should photos that were kept be moved/copied into albums, or only tagged?
-  (Moving on Android changes folders, which other apps can see.)
-- Should the pending pile be batched per session or kept across sessions?
+- Two-way sync, or phone → PC only? Two-way means deletes on the PC also remove photos on the phone.
+- Should WhatsApp photos be moved into albums (out of the WhatsApp folder), or copied instead?
+- Export/import of the app's progress, so a reinstall doesn't forget what's reviewed?

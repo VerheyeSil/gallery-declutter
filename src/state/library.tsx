@@ -101,6 +101,8 @@ async function loadPhotos(): Promise<{ photos: Photo[]; albums: string[] }> {
       folder: folderOf.get(id) ?? '',
       takenAt: takenAt(filename, m.creationTime, m.modificationTime),
       modifiedAt: m.modificationTime ?? 0,
+      width: m.width,
+      height: m.height,
     };
   });
   return { photos, albums: [...new Set(albumTitles)].sort((a, b) => a.localeCompare(b)) };

@@ -9,6 +9,9 @@ export type Photo = {
   takenAt: number;
   /** When the file last changed on this phone; roughly when it arrived. */
   modifiedAt: number;
+  /** Pixel size, when the media store knows it. */
+  width: number | null;
+  height: number | null;
 };
 
 export type QueueId = 'new' | 'screenshots' | 'whatsapp' | 'camera' | 'all';

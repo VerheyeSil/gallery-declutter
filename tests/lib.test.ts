@@ -53,7 +53,7 @@ test('clusters photos into events split by time gaps', () => {
 
 test('builds queues oldest first', () => {
   const p = (id: string, folder: string, takenAt: number, modifiedAt = takenAt): Photo => ({
-    id, filename: `${id}.jpg`, folder, takenAt, modifiedAt,
+    id, filename: `${id}.jpg`, folder, takenAt, modifiedAt, width: null, height: null,
   });
   const photos = [p('s2', 'Screenshots', 20), p('w', 'WhatsApp Images', 5, 500), p('s1', 'Screenshots', 10)];
   assert.deepEqual(buildQueue('screenshots', photos, null).map((x) => x.id), ['s1', 's2']);

@@ -20,6 +20,12 @@
       "package": "com.verheyesil.gallerydeclutter",
       "blockedPermissions": [
         "android.permission.RECORD_AUDIO"
+      ],
+      "permissions": [
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.WRITE_EXTERNAL_STORAGE",
+        "android.permission.READ_MEDIA_VISUAL_USER_SELECTED",
+        "android.permission.READ_MEDIA_IMAGES"
       ]
     },
     "web": {
@@ -40,6 +46,16 @@
       ]
     ],
     "scheme": "gallerydeclutter",
-    "backgroundColor": "#0E0F12"
+    "backgroundColor": "#0E0F12",
+    "extra": {
+      "router": {
+        "asyncRoutes": {
+          "web": true
+        }
+      },
+      "eas": {
+        "projectId": "e848b2cf-efe2-41d0-b692-47d2b6c8de11"
+      }
+    }
   }
 }

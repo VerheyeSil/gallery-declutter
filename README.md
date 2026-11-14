@@ -1,8 +1,7 @@
 # Gallery Declutter
 
 An Android app for decluttering your photo gallery. You swipe through photos
-Tinder-style to keep or delete them, sort them into albums with minimal effort,
-and browse everything as a timeline.
+Tinder-style to keep or delete them, and sort them into albums with minimal effort.
 
 Everything runs on your phone, so photos never leave the device.
 
@@ -22,8 +21,11 @@ Built:
 Planned:
 
 - Duplicate, burst and blurry-photo detection
-- Import of the old Google Photos library (Takeout) with correct dates
-- Timeline and map view
+- Import of the old Google Photos library (Takeout) and PC photos with correct dates
+- Local phone ↔ PC sync with [Syncthing](https://syncthing.net) (no cloud)
+
+Not planned: timeline, map and face search. For that, run [Immich](https://immich.app)
+on your PC. See [docs/PLAN.md](docs/PLAN.md) for the full picture.
 
 ## Development
 
