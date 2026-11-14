@@ -8,7 +8,7 @@ Everything runs on your phone, so photos never leave the device.
 
 **Status:** first version: swipe deck + album maker. See [docs/PLAN.md](docs/PLAN.md).
 
-## Features (planned)
+## Features
 
 Built:
 
