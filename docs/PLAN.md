@@ -14,8 +14,10 @@ uploads.
 | Scope | Start with what's **on the phone**. Old Google Photos cloud library next, PC photos later. | Lets us start right away. The app can only see photos stored on the device (see Phase 0). |
 | PC | Later. No desktop app, just a one-off **gather script** that moves PC photos onto the phone. | The phone becomes the single source of truth. |
 | Automation | The app *suggests*, and the user always decides | Nothing is deleted or filed without a swipe or tap. |
-| Deleting | Collected in a "to delete" pile, then confirmed in one batch | Android shows its own confirmation, and photos go to the system trash, so mistakes can be recovered. |
+| Deleting | Collected in a "to delete" pile, then confirmed in one batch | Deleting is **permanent** after Android's confirmation dialog (there's no trash), so the in-app review step is the safety net. |
 | Privacy | Fully on-device | Photos never leave the phone, so a public repo is fine. |
+| Progress | Every handled photo is saved by ID with a timestamp, plus the time of the last visit | You never review a photo twice. Old photos imported later (e.g. from Google Photos) still show up, which a single "reviewed up to" date would miss. |
+| Albums on Android | An album is a folder (`Pictures/<name>`). Photos are **moved**, not copied. | No duplicate files. WhatsApp chats may no longer show photos that were moved out of the WhatsApp folder. |
 
 ## Phase 0: Gather everything on the phone (in steps, not a blocker)
 
@@ -56,7 +58,7 @@ Plan: a small **Python script on the PC** (`tools/gather/`) that:
 WhatsApp photos already on the phone get their dates fixed in the app itself,
 by parsing the filename.
 
-## Phase 1: MVP swipe deck
+## Phase 1: MVP swipe deck ✅ built
 
 - Ask for photo access (`expo-media-library`).
 - **Queues**: "Screenshots", "WhatsApp", "Everything", each oldest-first or per month.
@@ -79,7 +81,7 @@ Automatic queues of likely trash:
 - Blurry or very dark photos (sharpness/brightness score)
 - Photos of documents, receipts and whiteboards (on-device ML Kit labels)
 
-## Phase 3: Albums
+## Phase 3: Albums ✅ built (swipe-up picker + event suggestions, time-based)
 
 1. **Swipe up → quick album picker**: recent albums as chips, plus "New album…".
 2. **Suggested events**: cluster photos by time (and GPS when available) into

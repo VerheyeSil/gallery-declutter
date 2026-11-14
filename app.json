@@ -5,7 +5,7 @@
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
-    "userInterfaceStyle": "light",
+    "userInterfaceStyle": "dark",
     "ios": {
       "supportsTablet": true
     },
@@ -17,10 +17,29 @@
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
       "predictiveBackGestureEnabled": false,
-      "package": "com.verheyesil.gallerydeclutter"
+      "package": "com.verheyesil.gallerydeclutter",
+      "blockedPermissions": [
+        "android.permission.RECORD_AUDIO"
+      ]
     },
     "web": {
       "favicon": "./assets/favicon.png"
-    }
+    },
+    "plugins": [
+      "expo-image",
+      "expo-router",
+      [
+        "expo-media-library",
+        {
+          "photosPermission": "Allow Gallery Declutter to access your photos so you can review and organise them.",
+          "savePhotosPermission": "Allow Gallery Declutter to move photos into albums and delete the ones you choose.",
+          "granularPermissions": [
+            "photo"
+          ]
+        }
+      ]
+    ],
+    "scheme": "gallerydeclutter",
+    "backgroundColor": "#0E0F12"
   }
 }
